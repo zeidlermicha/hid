@@ -73,6 +73,8 @@ extern "C" {
 			    in all cases, and valid on the Windows implementation
 			    only if the device contains more than one interface. */
 			int interface_number;
+			int output_report_length;
+			int input_report_length;
 
 			/** Pointer to the next device */
 			struct hid_device_info *next;

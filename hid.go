@@ -19,16 +19,17 @@ var ErrUnsupportedPlatform = errors.New("hid: unsupported platform")
 
 // DeviceInfo is a hidapi info structure.
 type DeviceInfo struct {
-	Path         string // Platform-specific device path
-	VendorID     uint16 // Device Vendor ID
-	ProductID    uint16 // Device Product ID
-	Release      uint16 // Device Release Number in binary-coded decimal, also known as Device Version Number
-	Serial       string // Serial Number
-	Manufacturer string // Manufacturer String
-	Product      string // Product string
-	UsagePage    uint16 // Usage Page for this Device/Interface (Windows/Mac only)
-	Usage        uint16 // Usage for this Device/Interface (Windows/Mac only)
-
+	Path               string // Platform-specific device path
+	VendorID           uint16 // Device Vendor ID
+	ProductID          uint16 // Device Product ID
+	Release            uint16 // Device Release Number in binary-coded decimal, also known as Device Version Number
+	Serial             string // Serial Number
+	Manufacturer       string // Manufacturer String
+	Product            string // Product string
+	UsagePage          uint16 // Usage Page for this Device/Interface (Windows/Mac only)
+	Usage              uint16 // Usage for this Device/Interface (Windows/Mac only)
+	InputReportLength  int
+	OutputReportLength int
 	// The USB interface which this logical device
 	// represents. Valid on both Linux implementations
 	// in all cases, and valid on the Windows implementation

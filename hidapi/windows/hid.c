@@ -417,11 +417,13 @@ struct hid_device_info HID_API_EXPORT * HID_API_CALL hid_enumerate(unsigned shor
 				if (nt_res == HIDP_STATUS_SUCCESS) {
 					cur_dev->usage_page = caps.UsagePage;
 					cur_dev->usage = caps.Usage;
+					cur_dev->input_report_length =  caps.InputReportByteLength-1;
+                    cur_dev->output_report_length = caps.OutputReportByteLength-1;
 				}
 
 				HidD_FreePreparsedData(pp_data);
 			}
-			
+
 			/* Fill out the record */
 			cur_dev->next = NULL;
 			str = device_interface_detail_data->DevicePath;

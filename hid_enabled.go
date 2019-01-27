@@ -85,13 +85,15 @@ func Enumerate(vendorID uint16, productID uint16) []DeviceInfo {
 	var infos []DeviceInfo
 	for ; head != nil; head = head.next {
 		info := DeviceInfo{
-			Path:      C.GoString(head.path),
-			VendorID:  uint16(head.vendor_id),
-			ProductID: uint16(head.product_id),
-			Release:   uint16(head.release_number),
-			UsagePage: uint16(head.usage_page),
-			Usage:     uint16(head.usage),
-			Interface: int(head.interface_number),
+			Path:               C.GoString(head.path),
+			VendorID:           uint16(head.vendor_id),
+			ProductID:          uint16(head.product_id),
+			Release:            uint16(head.release_number),
+			UsagePage:          uint16(head.usage_page),
+			Usage:              uint16(head.usage),
+			InputReportLength:  int(head.input_report_length),
+			OutputReportLength: int(head.output_report_length),
+			Interface:          int(head.interface_number),
 		}
 		if head.serial_number != nil {
 			info.Serial, _ = wcharTToString(head.serial_number)
@@ -129,8 +131,11 @@ func (info DeviceInfo) Open() (*Device, error) {
 type Device struct {
 	DeviceInfo // Embed the infos for easier access
 
-	device *C.hid_device // Low level HID device to communicate through
-	lock   sync.Mutex
+	device    *C.hid_device // Low level HID device to communicate through
+	lock      sync.Mutex
+	readCh    chan []byte
+	readErr   error
+	readSetup sync.Once
 }
 
 // Close releases the HID USB device handle.
@@ -225,4 +230,32 @@ func (dev *Device) Read(b []byte) (int, error) {
 		return 0, errors.New("hidapi: " + failure)
 	}
 	return read, nil
+}
+
+func (d *Device) ReadCh() <-chan []byte {
+	d.readSetup.Do(func() {
+		d.readCh = make(chan []byte, 30)
+		go d.readThread()
+	})
+	return d.readCh
+}
+
+func (d *Device) readThread() {
+	defer close(d.readCh)
+	for {
+		buf := make([]byte, d.InputReportLength)
+		n, err := d.Read(buf)
+		if err != nil {
+			d.readErr = err
+			return
+		}
+		select {
+		case d.readCh <- buf[:n]:
+		default:
+		}
+	}
+}
+
+func (dev *Device) ReadError() error {
+	return dev.readErr
 }

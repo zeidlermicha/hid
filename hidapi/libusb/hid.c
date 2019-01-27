@@ -536,7 +536,7 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 	while ((dev = devs[i++]) != NULL) {
 		struct libusb_device_descriptor desc;
 		struct libusb_config_descriptor *conf_desc = NULL;
-		int j, k;
+		int j, k, l;
 		int interface_num = 0;
 
 		int res = libusb_get_device_descriptor(dev, &desc);
@@ -569,7 +569,25 @@ struct hid_device_info  HID_API_EXPORT *hid_enumerate(unsigned short vendor_id, 
 								root = tmp;
 							}
 							cur_dev = tmp;
+                            for (l = 0; l < intf_desc->bNumEndpoints; l++) {
+                            	const struct libusb_endpoint_descriptor *ep
+                            				= &intf_desc->endpoint[l];
+                                int is_output =
+                                    (ep->bEndpointAddress & LIBUSB_ENDPOINT_DIR_MASK)
+                                      == LIBUSB_ENDPOINT_OUT;
+                                int is_input =
+                                    (ep->bEndpointAddress & LIBUSB_ENDPOINT_DIR_MASK)
+                                      == LIBUSB_ENDPOINT_IN;
+                                if (is_input) {
+                                    /* Use this endpoint for INPUT */
+                                    cur_dev->input_report_length = ep->wMaxPacketSize;
+                                }
+                                if (is_output) {
+                                    /* Use this endpoint for INPUT */
+                                    cur_dev->output_report_length = ep->wMaxPacketSize;
+                                }
 
+                            }
 							/* Fill out the record */
 							cur_dev->next = NULL;
 							cur_dev->path = make_path(dev, interface_num);
